@@ -1,26 +1,25 @@
 import { useState, useEffect } from 'react';
+import { DEEPSEEK_API_KEY } from '@/lib/config';
 
 interface ExploreTopicsProps {
-  apiKey: string;
   onTopicSelect: (topic: string) => void;
-  savedKeyword?: string;
-  savedTopics?: string[];
+  savedKeyword: string;
+  savedTopics: string[];
   onExplore?: (keyword: string, topics: string[]) => void;
   onClear?: () => void;
 }
 
 export default function ExploreTopics({ 
-  apiKey, 
   onTopicSelect,
-  savedKeyword = '',
-  savedTopics = [],
+  savedKeyword,
+  savedTopics,
   onExplore,
   onClear
 }: ExploreTopicsProps) {
-  const [keyword, setKeyword] = useState(savedKeyword);
+  const [keyword, setKeyword] = useState<string>(savedKeyword);
   const [topics, setTopics] = useState<string[]>(savedTopics);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   // 当保存的关键词和主题发生变化时更新状态
   useEffect(() => {
@@ -34,13 +33,8 @@ export default function ExploreTopics({
       return;
     }
 
-    if (!apiKey) {
-      setError('请先在设置中配置 API 密钥');
-      return;
-    }
-
-    setIsLoading(true);
     setError('');
+    setIsLoading(true);
 
     try {
       const response = await fetch('/api/explore-topics', {
@@ -48,7 +42,7 @@ export default function ExploreTopics({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ keyword, apiKey }),
+        body: JSON.stringify({ keyword, apiKey: DEEPSEEK_API_KEY }),
       });
 
       const data = await response.json();

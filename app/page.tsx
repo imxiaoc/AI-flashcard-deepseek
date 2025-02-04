@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import FlashCard from "./components/FlashCard";
-import SettingsDialog from "./components/SettingsDialog";
 import ReviewCards from "./components/ReviewCards";
 import ManageMarkedCards from "./components/ManageMarkedCards";
 import ExploreTopics from "./components/ExploreTopics";
@@ -10,6 +9,12 @@ import ExploreTopics from "./components/ExploreTopics";
 interface Flashcard {
   question: string;
   answer: string;
+}
+
+interface MarkedCard {
+  question: string;
+  answer: string;
+  topic: string;
 }
 
 type TabType = 'topic' | 'content' | 'manage' | 'explore';
@@ -20,7 +25,6 @@ export default function Home() {
   const [content, setContent] = useState("");
   const [cardCount, setCardCount] = useState("5");
   const [difficulty, setDifficulty] = useState("困难");
-  const [apiKey, setApiKey] = useState("");
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +39,7 @@ export default function Home() {
     try {
       const response = await fetch('/api/marked-cards');
       const data = await response.json();
-      const marked = new Set(data.markedCards.map((card: any) => card.question));
+      const marked = new Set(data.markedCards.map((card: MarkedCard) => card.question));
       setMarkedCards(marked);
     } catch (error) {
       console.error('获取标记卡片失败:', error);
@@ -65,11 +69,6 @@ export default function Home() {
   }, [flashcards.length]); // 依赖项包含 flashcards.length
 
   const handleSubmit = async () => {
-    if (!apiKey) {
-      setError("请先在设置中配置 API 密钥");
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError("");
@@ -84,7 +83,6 @@ export default function Home() {
           content,
           cardCount: parseInt(cardCount),
           difficulty,
-          apiKey,
           mode: activeTab,
         }),
       });
@@ -168,7 +166,6 @@ export default function Home() {
                 复习标记内容
               </button>
             )}
-            <SettingsDialog onApiKeyChange={setApiKey} />
           </div>
         </div>
         
@@ -233,13 +230,12 @@ export default function Home() {
               <ManageMarkedCards onCardsUpdated={fetchMarkedCards} />
             ) : activeTab === 'explore' ? (
               <ExploreTopics 
-                apiKey={apiKey} 
                 onTopicSelect={(topic) => {
                   setTopic(topic);
                   setActiveTab('topic');
                 }}
-                savedKeyword={exploredKeyword}
-                savedTopics={exploredTopics}
+                savedKeyword={exploredKeyword || ''}  
+                savedTopics={exploredTopics || []}    
                 onExplore={(keyword, topics) => {
                   setExploredKeyword(keyword);
                   setExploredTopics(topics);
